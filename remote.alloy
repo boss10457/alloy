@@ -1,0 +1,37 @@
+prometheus.remote_write "prome_13" {
+  endpoint {
+    url = "http://10.11.233.13:9090/api/v1/write"
+  }
+}
+
+
+
+// Node Exporter
+prometheus.exporter.unix "vms_13" {
+
+}
+
+// Black Box
+prometheus.exporter.blackbox "blackbox01" {
+  config_file = "/etc/alloy/blackbox.yml"
+  target {
+    name= "lab01"
+    address = "8.8.8.8"
+    module = "icmp_ping"
+  }
+}
+
+
+// Scrape
+prometheus.scrape "prome_fw01" {
+  targets = prometheus.exporter.blackbox.blackbox01.targets
+  forward_to = [prometheus.remote_write.prome_13.receiver]
+  scrape_interval = "30s"
+}
+
+prometheus.scrape "prome_fw02" {
+  targets = prometheus.exporter.unix.vms_13.targets
+  forward_to = [prometheus.remote_write.prome_13.receiver]
+  scrape_interval = "30s"
+}
+
